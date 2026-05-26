@@ -2,11 +2,13 @@ defmodule Set
   using List
 
   defspace Set < SuperSet end
+  defspace Element end
 
   defoperator union : Set -> Set -> Set [associative id:∅] end
   defoperator isIn : Element -> Set -> Bool end
   defoperator implication : Bool -> Bool -> Bool end
   defoperator negation : Bool -> Bool end
+  defoperator disjunction : Bool -> Bool -> Bool end
 
   defvar p:Bool q:Bool end
 

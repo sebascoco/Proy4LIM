@@ -88,18 +88,18 @@ list[str] collectOutput(Program prog) {
                 if (isEmpty(subs))
                     out += ["Space: <name>"];
                 else
-                    out += ["Space: <name> < <intercalate(", ", subs)>"];
+                    out += ["Space: <name> \< <intercalate(", ", subs)>"];
             }
             case operatorDef(str name, list[VeriType] sig, _): {
-                list[str] ts = [ showVeriType(t) | t <- sig ];
-                out += ["Operator: <name> : <intercalate(" -> ", ts)>"];
+                list[str] ts = [ showVeriType(t) | VeriType t <- sig ];
+                out += ["Operator: <name> : <intercalate(" -\> ", ts)>"];
             }
             case varBlock(list[VarDef] defs): {
                 for (varDef(str vn, VeriType vt) <- defs)
                     out += ["Var: <vn> : <showVeriType(vt)>"];
             }
             case ruleDef(applyOp(str lOp, _), applyOp(str rOp, _)):
-                out += ["Rule: (<lOp> ...) -> (<rOp> ...)"];
+                out += ["Rule: (<lOp> ...) -\> (<rOp> ...)"];
             case expressionDecl(Expression expr, _):
                 out += ["Expression: <showExpr(expr)>"];
         }
@@ -132,13 +132,13 @@ default str showExpr(Expression _)     = "...";
 str showOp(andOp())     = "and";
 str showOp(orOp())      = "or";
 str showOp(equivOp())   = "≡";
-str showOp(impliesOp()) = "=>";
+str showOp(impliesOp()) = "=\>";
 str showOp(eqOp())      = "=";
 str showOp(ltOp())      = "<";
 str showOp(gtOp())      = ">";
 str showOp(leqOp())     = "\<=";
 str showOp(geqOp())     = "\>=";
-str showOp(neqOp())     = "\<>";
+str showOp(neqOp())     = "\<\>";
 str showOp(addOp())     = "+";
 str showOp(subOp())     = "-";
 str showOp(mulOp())     = "*";

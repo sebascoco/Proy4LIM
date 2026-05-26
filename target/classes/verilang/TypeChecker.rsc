@@ -133,8 +133,8 @@ list[TypeError] checkDecl(varBlock(list[VarDef] defs), SpaceEnv spaces, OpEnv op
 list[TypeError] checkDecl(ruleDef(OpApplication lhs, OpApplication rhs), SpaceEnv spaces, OpEnv ops, TypeEnv vars, set[str] defined) {
   list[TypeError] errors = [];
   // Element existence rule (Task 6): operators in rule must be defined
-  applyOp(str lname, _) = lhs;
-  applyOp(str rname, _) = rhs;
+  str lname = lhs.operator;
+  str rname = rhs.operator;
   if (lname notin ops && lname notin defined) {
     errors += [typeError("Rule: operator \'<lname>\' is not defined (element existence rule)")];
   }
@@ -172,11 +172,7 @@ list[TypeError] checkTypeExists(VeriType tp, SpaceEnv spaces, str context) {
 list[TypeError] checkExprTypes(Expression expr, SpaceEnv spaces, OpEnv ops, TypeEnv vars, set[str] defined) {
   list[TypeError] errors = [];
   visit(expr) {
-    case idExpr(str name): {
-      if (name notin vars && name notin defined && name notin ops) {
-        errors += [typeWarning("Identifier \'<name>\' not found in scope (may be a bound variable)")];
-      }
-    }
+    case idExpr(str name): ;
     case opApp(applyOp(str name, list[Expression] args)): {
       // Element existence rule: operator must exist
       if (name notin ops && name notin defined) {

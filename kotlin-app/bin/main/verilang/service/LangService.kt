@@ -42,7 +42,7 @@ class LangService {
     }
 
     private val rascalJar: File get() = projectRoot.resolve("rascal-shell-stable.jar")
-    private val srcDir: File    get() = projectRoot.resolve("src")
+    private val rascalSourceDir: File get() = projectRoot.resolve("src/main/rascal")
 
     /** Run a VeriLang (.vl) file and return the analysis result. */
     suspend fun run(filePath: String): RunResult = withContext(Dispatchers.IO) {
@@ -50,7 +50,8 @@ class LangService {
             println("[VeriLangService] Running Rascal...")
             println("[VeriLangService] file    : $filePath")
             println("[VeriLangService] jar     : ${rascalJar.absolutePath}")
-            println("[VeriLangService] src     : ${srcDir.absolutePath}")
+            println("[VeriLangService] project : ${projectRoot.absolutePath}")
+            println("[VeriLangService] src     : ${rascalSourceDir.absolutePath}")
 
             val t0 = System.currentTimeMillis()
             val output = executeRascal(filePath)
@@ -74,20 +75,28 @@ class LangService {
     private fun executeRascal(filePath: String): String {
         if (!rascalJar.exists())
             throw RuntimeException("rascal-shell-stable.jar not found at: ${rascalJar.absolutePath}")
-        if (!srcDir.exists())
-            throw RuntimeException("src/ directory not found at: ${srcDir.absolutePath}")
+        if (!rascalSourceDir.exists())
+            throw RuntimeException("Rascal source directory not found at: ${rascalSourceDir.absolutePath}")
+
+        val rascalFilePath = File(filePath)
+            .absoluteFile
+            .toPath()
+            .normalize()
+            .toString()
+            .replace('\\', '/')
+            .let { if (Regex("^[A-Za-z]:/").containsMatchIn(it)) "/$it" else it }
 
         val cmd = listOf(
             "java",
             "-Dfile.encoding=UTF-8",
-            "-Drascal.projectPath=${srcDir.absolutePath}",
+            "-Drascal.projectPath=${projectRoot.absolutePath}",
             "-jar", rascalJar.absolutePath,
             "verilang::RunnerJson",   // ← VeriLang Rascal module
-            filePath
+            rascalFilePath
         )
 
         val process = ProcessBuilder(cmd)
-            .directory(srcDir)
+            .directory(projectRoot)
             .redirectErrorStream(false)
             .start()
         process.outputStream.close()

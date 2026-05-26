@@ -48,17 +48,31 @@ Module implodeModule((Module) `defmodule <Identifier name> <Imports? imp> <Body 
           implodeBody(body));
 
 // ─── Imports ─────────────────────────────────────────────────────────────────
-list[Import] implodeImports((Imports) `<Import+ imps>`) =
-  [implodeImport(i) | Import i <- imps];
+list[Import] implodeImports(Imports imports) {
+  list[Import] imps = [];
+  visit(imports) {
+    case Import i: imps += [implodeImport(i)];
+  }
+  return imps;
+}
 
 Import implodeImport((Import) `using <Identifier name>`) = \import("<name>");
 
 // ─── Body ─────────────────────────────────────────────────────────────────────
-list[BodyDecl] implodeBody((Body) `<BodyDecl* decls>`) =
-  [implodeBodyDecl(d) | BodyDecl d <- decls];
+list[BodyDecl] implodeBody(Body body) {
+  list[BodyDecl] decls = [];
+  visit(body) {
+    case Space s:         decls += [implodeSpace(s)];
+    case OperatorDef op:  decls += [implodeOperator(op)];
+    case VarBlock v:      decls += [implodeVarBlock(v)];
+    case RuleDef r:       decls += [implodeRule(r)];
+    case ExpressionDef e: decls += [implodeExpressionDef(e)];
+  }
+  return decls;
+}
 
 BodyDecl implodeBodyDecl((BodyDecl) `<Space s>`)         = implodeSpace(s);
-BodyDecl implodeBodyDecl((BodyDecl) `<OperatorDef o>`)   = implodeOperator(o);
+BodyDecl implodeBodyDecl((BodyDecl) `<OperatorDef opDef>`) = implodeOperator(opDef);
 BodyDecl implodeBodyDecl((BodyDecl) `<VarBlock v>`)      = implodeVarBlock(v);
 BodyDecl implodeBodyDecl((BodyDecl) `<RuleDef r>`)       = implodeRule(r);
 BodyDecl implodeBodyDecl((BodyDecl) `<ExpressionDef e>`) = implodeExpressionDef(e);
@@ -74,26 +88,29 @@ BodyDecl implodeOperator((OperatorDef) `defoperator <Identifier name> : <Curryin
               implodeCurrying(curry),
               attrs has top ? implodeAttributes(attrs.top) : []);
 
-list[VeriType] implodeCurrying((CurryingNotation) `<TypeRef t1> -\> <TypeRef t2>`) =
-  [implodeTypeRef(t1), implodeTypeRef(t2)];
-
-list[VeriType] implodeCurrying((CurryingNotation) `<TypeRef t1> -\> <TypeRef t2> -\> <{TypeRef "-\>"}+ rest>`) {
-  list[VeriType] types = [implodeTypeRef(t1), implodeTypeRef(t2)];
-  for (TypeRef r <- rest) types += [implodeTypeRef(r)];
-  return types;
-}
+list[VeriType] implodeCurrying((CurryingNotation) `<{TypeRef "-\>"}+ types>`) =
+  [implodeTypeRef(t) | TypeRef t <- types];
 
 VeriType implodeTypeRef((TypeRef) `<Type tp>`) = implodeType(tp);
 
-VeriType implodeType((Type) `Int`)    = typeInt();
-VeriType implodeType((Type) `Bool`)   = typeBool();
-VeriType implodeType((Type) `Char`)   = typeChar();
-VeriType implodeType((Type) `String`) = typeString();
-VeriType implodeType((Type) `<Identifier id>`) = typeUser("<id>");
+VeriType implodeType((Type) `<Identifier id>`) {
+  switch ("<id>") {
+    case "Int":    return typeInt();
+    case "Bool":   return typeBool();
+    case "Char":   return typeChar();
+    case "String": return typeString();
+    default:       return typeUser("<id>");
+  }
+}
 
 // ─── Variables ────────────────────────────────────────────────────────────────
-BodyDecl implodeVarBlock((VarBlock) `defvar <{VarDef " "}+ defs> end`) =
-  varBlock([implodeVarDef(d) | VarDef d <- defs]);
+BodyDecl implodeVarBlock(VarBlock block) {
+  list[VarDef] defs = [];
+  visit(block) {
+    case VarDef d: defs += [implodeVarDef(d)];
+  }
+  return varBlock(defs);
+}
 
 VarDef implodeVarDef((VarDef) `<Identifier name> : <Type tp>`) =
   varDef("<name>", implodeType(tp));
@@ -159,7 +176,7 @@ OpApplication implodeOpApp((OpApplication) `( <Identifier name> <Arg* args> )`) 
 Expression implodeArg((Arg) `<Primary p>`) = implodePrimary(p);
 
 // ─── Attributes ──────────────────────────────────────────────────────────────
-list[Attribute] implodeAttributes((Attributes) `[ <{AttrItem " "}+ items> ]`) =
+list[Attribute] implodeAttributes((Attributes) `[ <AttrItem+ items> ]`) =
   [implodeAttrItem(i) | AttrItem i <- items];
 
 Attribute implodeAttrItem((AttrItem) `<Identifier key>`) = attrKey("<key>");
@@ -170,9 +187,6 @@ AttrVal implodeAttrVal((AttrVal) `<Literal lit>`)    = attrLit(implodeLiteral(li
 
 // ─── Literals ────────────────────────────────────────────────────────────────
 Literal implodeLiteral((Literal) `<IntLit n>`)  = intLit(toInt("<n>"));
-Literal implodeLiteral((Literal) `True`)         = boolLit(true);
-Literal implodeLiteral((Literal) `False`)        = boolLit(false);
-Literal implodeLiteral((Literal) `None`)         = boolLit(false);
 Literal implodeLiteral((Literal) `<StrLit s>`)  {
   str raw = "<s>";
   return strLit(substring(raw, 1, size(raw)-1));

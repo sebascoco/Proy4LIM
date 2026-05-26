@@ -1,14 +1,13 @@
 module verilang::Syntax
 
 // ─── Keywords ────────────────────────────────────────────────────────────────
-keyword Keywords
+lexical Keywords
   = "defmodule" | "using"        | "defspace"     | "defoperator"
   | "defvar"    | "defrule"      | "defexpression" | "end"
   | "forall"    | "exists"       | "in"            | "and"
   | "or"        | "neg"          | "defer"         | "True"
   | "False"     | "None"
   // ── new type keywords (Project 3) ──────────────────────────────────────────
-  | "Int"       | "Bool"         | "Char"          | "String"
   ;
 
 // ─── Layout ──────────────────────────────────────────────────────────────────
@@ -20,7 +19,7 @@ lexical Digit  = [0-9];
 lexical Char   = Letter | Digit | "-";
 
 lexical Identifier
-  = Letter Char* !>> (Letter | Digit | "-") \ Keywords;
+  = ([a-zA-Z][a-zA-Z0-9\-]* !>> [a-zA-Z0-9\-]) \ Keywords;
 
 lexical IntLit   = Digit+;
 lexical BoolLit  = "True" | "False" | "None";
@@ -32,12 +31,7 @@ lexical NullVal  = "ø" | "∅";
 // FIX (Project 4): @category annotations moved off of alternatives to avoid
 // parse errors in older Rascal versions. The syntax is kept, categories removed.
 syntax Type
-  = "Int"
-  | "Bool"
-  | "Char"
-  | "String"
-  | Identifier   // user-defined type (space name)
-  ;
+  = Identifier;  // built-in or user-defined type (space name)
 
 // ─── Start symbol ────────────────────────────────────────────────────────────
 start syntax Program = Module;
@@ -75,14 +69,14 @@ syntax OperatorDef
   = "defoperator" Identifier ":" CurryingNotation Attributes? "end";
 
 syntax CurryingNotation
-  = TypeRef "-\>" TypeRef ("-\>" TypeRef)*;
+  = {TypeRef "-\>"}+;
 
 syntax TypeRef
   = Type;
 
 // ─── Variables ───────────────────────────────────────────────────────────────
 syntax VarBlock
-  = "defvar" {VarDef " "}+ "end";
+  = "defvar" VarDef+ "end";
 
 syntax VarDef
   = Identifier ":" Type;
@@ -168,7 +162,7 @@ syntax Arg
 
 // ─── Attributes ──────────────────────────────────────────────────────────────
 syntax Attributes
-  = "[" {AttrItem " "}+ "]";
+  = "[" AttrItem+ "]";
 
 syntax AttrItem
   = Identifier (":" AttrVal)?;
@@ -181,7 +175,6 @@ syntax AttrVal
 // ─── Literals ────────────────────────────────────────────────────────────────
 syntax Literal
   = intLit:  IntLit
-  | boolLit: BoolLit
   | strLit:  StrLit
   | charLit: CharLit
   | nullLit: NullVal
