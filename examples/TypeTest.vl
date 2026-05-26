@@ -1,0 +1,20 @@
+defmodule TypeTest
+
+  defspace Numbers end
+  defspace Strings end
+
+  defoperator add : Int -> Int -> Int end
+  defoperator greet : String -> Bool end
+  defoperator isEven : Int -> Bool end
+  defoperator charToInt : Char -> Int end
+
+  defvar x:Int y:Int end
+  defvar flag:Bool end
+  defvar letter:Char end
+  defvar msg:String end
+  defvar n:Numbers end
+
+  defexpression (x = 0) end
+  defexpression (flag = True) end
+
+end

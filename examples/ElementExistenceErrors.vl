@@ -1,0 +1,13 @@
+defmodule ElementExistenceErrors
+
+  defspace ValidSpace end
+
+  defoperator op1 : ValidSpace -> Bool end
+
+  defspace SubSpaceError < UndefinedParent end
+
+  defoperator badOpRef : UndefinedType -> Bool end
+
+  defrule (op1 x) -> (undefinedOp x) end
+
+end

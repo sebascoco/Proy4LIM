@@ -1,0 +1,18 @@
+defmodule ElementExistence
+
+  defspace MySet end
+  defspace Element end
+
+  defoperator union : MySet -> MySet -> MySet [associative id:∅] end
+  defoperator contains : Element -> MySet -> Bool end
+  defoperator and2 : Bool -> Bool -> Bool end
+
+  defvar p:Bool q:Bool end
+
+  defrule (and2 p q) -> (and2 q p) end
+
+  defexpression (forall e in Element . (forall s in MySet . (contains e s))) end
+
+  defexpression (p = True) end
+
+end

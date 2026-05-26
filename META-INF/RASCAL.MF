@@ -1,0 +1,3 @@
+Project-Name: VeriLang4
+Source: src/main/rascal
+Require-Libraries: |lib://typepal|

@@ -1,0 +1,15 @@
+defmodule TypeErrors
+
+  defspace ValidSpace end
+
+  defoperator myOp : ValidSpace -> Bool end
+
+  defvar x:Int end
+
+  defoperator badOp : UnknownType -> Bool end
+
+  defvar y:MissingSpace end
+
+  defexpression (x = True) end
+
+end
